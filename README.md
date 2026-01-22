@@ -38,7 +38,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/programa.git
+git clone https://github.com/alberttjc/excel-parser.git
 cd programa
 
 # Sync dependencies and create virtual environment
