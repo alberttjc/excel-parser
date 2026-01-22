@@ -34,4 +34,3 @@ class Product(BaseModel):
 class ProductSchedule(BaseModel):
     schedule_name: str
     products: List[Product]
-    warnings: List[str] = Field(default_factory=list, description="List of validation or parsing warnings")

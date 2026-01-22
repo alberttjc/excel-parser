@@ -344,7 +344,7 @@ async def extract_products_from_sheet(
 if __name__ == "__main__":
     # used mainly for testing and debugging
     async def main():
-        excel_file = "./data/schedule_sample3.xlsx"
+        excel_file = "./data/schedule_sample1.xlsx"
         xls = pd.ExcelFile(excel_file)
 
         total_products = 0
@@ -352,7 +352,7 @@ if __name__ == "__main__":
             try:
                 logger.info(f"Extracting products from sheet: {sheet_name}")
                 df = pd.read_excel(io=excel_file, sheet_name=sheet_name)
-                products = await extract_products_from_sheet(
+                products, warnings = await extract_products_from_sheet(
                     df=df, sheet_name=sheet_name
                 )
                 total_products += len(products)

@@ -11,29 +11,6 @@
 
 ---
 
-## 🏛 System Architecture
-
-The following diagram illustrates the production deployment setup for the Excel Schedule Parser API:
-
-```mermaid
-graph TD
-    A[Client / Web UI] -->|POST /parse| B[FastAPI Application]
-    B -->|Extract Context| C[Unified Consolidation Engine]
-    C -->|Deduplicated Text Blocks| D[Gemini 2.5 Flash API]
-    D -->|Structured JSON| C
-    C -->|Sanitized Data| B
-    B -->|Response| A
-
-    subgraph "Production Deployment (AWS/GCP)"
-    B
-    C
-    end
-
-    subgraph "External Dependencies"
-    D
-    end
-```
-
 ---
 
 ## 🚀 Quick Start
