@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel Schedule Parser</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Google Sans",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: #f9f9f9;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: white;
+        color: #202124;
+        padding: 20px 32px;
+        border-bottom: 1px solid #e8eaed;
+      }
+
+      .header h1 {
+        font-size: 1.375em;
+        margin-bottom: 4px;
+        font-weight: 400;
+      }
+
+      .header p {
+        color: #5f6368;
+        font-size: 0.813em;
+      }
+
+      .upload-section {
+        padding: 20px 32px;
+        text-align: center;
+      }
+
+      .upload-area {
+        border: 2px dashed #dadce0;
+        border-radius: 4px;
+        padding: 24px 20px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        background: #fafafa;
+      }
+
+      .upload-area:hover {
+        border-color: #1a73e8;
+        background: #f1f3f4;
+      }
+
+      .upload-area.dragover {
+        border-color: #1a73e8;
+        background: #e8f0fe;
+      }
+
+      .upload-icon {
+        font-size: 1.5em;
+        color: #5f6368;
+        margin-bottom: 8px;
+      }
+
+      .upload-text {
+        font-size: 0.813em;
+        color: #202124;
+        margin-bottom: 4px;
+      }
+
+      .upload-subtext {
+        color: #5f6368;
+        font-size: 0.75em;
+      }
+
+      #fileInput {
+        display: none;
+      }
+
+      .file-info {
+        background: #f1f3f4;
+        border-radius: 4px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        display: none;
+        text-align: left;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: #202124;
+        margin-bottom: 2px;
+        font-size: 0.813em;
+      }
+
+      .file-size {
+        color: #5f6368;
+        font-size: 0.75em;
+      }
+
+      .parse-btn {
+        background: #1a73e8;
+        color: white;
+        border: none;
+        padding: 8px 24px;
+        font-size: 0.813em;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+      }
+
+      .parse-btn:hover:not(:disabled) {
+        background: #1765cc;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      .parse-btn:disabled {
+        background: #dadce0;
+        color: #80868b;
+        cursor: not-allowed;
+      }
+
+      .results-section {
+        padding: 0 32px 32px;
+        display: none;
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e8eaed;
+      }
+
+      .results-title {
+        font-size: 1em;
+        color: #202124;
+        font-weight: 500;
+      }
+
+      .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: 500;
+        background: #e8f5e9;
+        color: #1e8e3e;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+        border: 1px solid #e8eaed;
+      }
+
+      .stat-number {
+        font-size: 1.375em;
+        font-weight: 400;
+        color: #202124;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        color: #5f6368;
+        font-size: 0.75em;
+      }
+
+      .sheet-section {
+        margin-bottom: 24px;
+        background: white;
+        border: 1px solid #e8eaed;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e8eaed;
+      }
+
+      .sheet-name {
+        font-size: 0.813em;
+        font-weight: 500;
+        color: #202124;
+      }
+
+      .sheet-count {
+        background: #e8eaed;
+        color: #5f6368;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.75em;
+        font-weight: 500;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      .products-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        min-width: 800px;
+      }
+
+      .products-table th {
+        background: #f8f9fa;
+        color: #5f6368;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 500;
+        font-size: 0.688em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e8eaed;
+      }
+
+      .products-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f3f4;
+        color: #202124;
+        font-size: 0.813em;
+      }
+
+      .products-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 32px;
+      }
+
+      .spinner {
+        border: 3px solid #f1f3f4;
+        border-top: 3px solid #1a73e8;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #5f6368;
+      }
+
+      .empty-state-icon {
+        font-size: 2em;
+        margin-bottom: 12px;
+        opacity: 0.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📊 Excel Schedule Parser</h1>
+        <p>Convert your Excel product schedules to standardized JSON</p>
+      </div>
+
+      <div class="upload-section">
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Drop your Excel file here</div>
+          <div class="upload-subtext">or click to browse (.xlsx, .xls)</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        </div>
+
+        <div class="file-info" id="fileInfo">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <button class="parse-btn" id="parseBtn" disabled>
+          Parse Excel File
+        </button>
+      </div>
+
+      <div class="results-section" id="resultsSection">
+        <div class="loading" id="loading" style="display: none">
+          <div class="spinner"></div>
+          <div>Parsing your Excel file...</div>
+        </div>
+
+        <div id="resultsContent" style="display: none">
+          <div class="results-header">
+            <h2 class="results-title">Parsing Results</h2>
+            <div class="status-badge" id="statusBadge">Success</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="totalProducts">0</div>
+              <div class="stat-label">Total Products</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="sheetsCount">0</div>
+              <div class="stat-label">Sheets Processed</div>
+            </div>
+          </div>
+
+          <div id="sheetsContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const fileInfo = document.getElementById("fileInfo");
+      const fileName = document.getElementById("fileName");
+      const fileSize = document.getElementById("fileSize");
+      const parseBtn = document.getElementById("parseBtn");
+      const resultsSection = document.getElementById("resultsSection");
+      const loading = document.getElementById("loading");
+      const resultsContent = document.getElementById("resultsContent");
+
+      // File upload handling
+      uploadArea.addEventListener("click", () => fileInput.click());
+
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      function handleFile(file) {
+        if (!file.name.match(/\.(xlsx|xls)$/)) {
+          alert("Please select an Excel file (.xlsx or .xls)");
+          return;
+        }
+
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.style.display = "block";
+        parseBtn.disabled = false;
+        parseBtn.onclick = () => parseFile(file);
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      async function parseFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        resultsSection.style.display = "block";
+        loading.style.display = "block";
+        resultsContent.style.display = "none";
+
+        try {
+          const response = await fetch("/parse", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Failed to parse file");
+          }
+
+          const schedules = await response.json();
+          displayResults(schedules);
+        } catch (error) {
+          console.error("Error:", error);
+          displayError(
+            error.message || "Failed to parse file. Please try again.",
+          );
+        } finally {
+          loading.style.display = "none";
+        }
+      }
+
+      function displayResults(schedules) {
+        resultsContent.style.display = "block";
+
+        // Calculate total products
+        const totalProducts = schedules.reduce(
+          (sum, schedule) => sum + schedule.products.length,
+          0,
+        );
+
+        // Update stats
+        document.getElementById("totalProducts").textContent = totalProducts;
+        document.getElementById("sheetsCount").textContent = schedules.length;
+
+        // Display each sheet
+        const sheetsContainer = document.getElementById("sheetsContainer");
+        sheetsContainer.innerHTML = "";
+
+        schedules.forEach((schedule) => {
+          if (schedule.products.length > 0) {
+            const sheetSection = createSheetSection(schedule);
+            sheetsContainer.appendChild(sheetSection);
+          }
+        });
+
+        if (totalProducts === 0) {
+          sheetsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <div>No products found in any sheet</div>
+                    </div>
+                `;
+        }
+      }
+
+      function createSheetSection(schedule) {
+        const section = document.createElement("div");
+        section.className = "sheet-section";
+
+        const header = document.createElement("div");
+        header.className = "sheet-header";
+        header.innerHTML = `
+                <div class="sheet-name">📄 ${schedule.schedule_name}</div>
+                <div class="sheet-count">${schedule.products.length} products</div>
+            `;
+        section.appendChild(header);
+
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "table-wrapper";
+        const table = createProductsTable(schedule.products);
+        tableWrapper.appendChild(table);
+        section.appendChild(tableWrapper);
+
+        return section;
+      }
+
+      function createProductsTable(products) {
+        const table = document.createElement("table");
+        table.className = "products-table";
+
+        // Create header
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        const headers = [
+          "Code",
+          "Product",
+          "Brand",
+          "Colour",
+          "Material",
+          "Dimensions",
+          "Qty",
+          "RRP",
+        ];
+        headers.forEach((header) => {
+          const th = document.createElement("th");
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Create body
+        const tbody = document.createElement("tbody");
+        products.forEach((product) => {
+          const row = document.createElement("tr");
+
+          const dimensions = [];
+          if (product.width) dimensions.push(`W${product.width}`);
+          if (product.length) dimensions.push(`L${product.length}`);
+          if (product.height) dimensions.push(`H${product.height}`);
+
+          row.innerHTML = `
+                    <td><code>${product.doc_code || "-"}</code></td>
+                    <td><strong>${product.product_name || "-"}</strong></td>
+                    <td>${product.brand || "-"}</td>
+                    <td>${product.colour || "-"}</td>
+                    <td>${product.material || "-"}</td>
+                    <td>${dimensions.length > 0 ? dimensions.join(" × ") : "-"}</td>
+                    <td>${product.qty || "-"}</td>
+                    <td>${product.rrp ? "$" + product.rrp.toFixed(2) : "-"}</td>
+                `;
+          tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        return table;
+      }
+
+      function displayError(message) {
+        resultsContent.style.display = "block";
+
+        document.getElementById("totalProducts").textContent = "0";
+        document.getElementById("sheetsCount").textContent = "0";
+
+        document.getElementById("sheetsContainer").innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">❌</div>
+                    <div>${message}</div>
+                </div>
+            `;
+      }
+    </script>
+  </body>
+</html>
