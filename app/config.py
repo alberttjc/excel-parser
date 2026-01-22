@@ -1,10 +1,10 @@
 # LLM model
-EXTRACTION_MODEL = "gemini-2.5-flash"
+EXTRACTION_MODEL = "gemini-3-flash-preview"
 
 # Header Aliases
 HEADER_ALIASES = {
     "doc_code": ["doc_code", "reference", "code", "ref", "sku", "item no", "model"],
-    "product_name": ["item", "product", "name", "title"],
+    "product_name": ["item", "product", "name", "title", "description"],
     "brand": ["brand", "manufacturer", "supplier", "make", "mfr"],
     "colour": ["colour", "color", "col", "finish color"],
     "finish": ["finish", "surface", "texture", "sheen", "polished", "matt"],
@@ -18,7 +18,6 @@ HEADER_ALIASES = {
     "product_description": [
         "product description",
         "short description",
-        "description",
         "desc",
         "overview",
     ],
@@ -41,7 +40,7 @@ CRITICAL RULES:
 3. PRODUCT_DESCRIPTION: A professional one-sentence summary (max 12 words). Avoid technical jargon (e.g., 'A premium wool-blend carpet designed for luxury residential spaces').
 4. PRODUCT_DETAILS: Format all warranty, notes and installation info as a semicolon-separated list (e.g., 'Warranty: 15 years; Note: TO BE INSTALLED IN ACCORDANCE WITH AS/NZS 2455.1:2007').
 5. COLOUR/FINISH/MATERIAL: Be specific. If it's a 'Gold Scheme' or has a 'Satin' finish, capture that accurately. Material can be about the composition of the product.
-6. DIMENSIONS: Convert to millimetres (mm). '3.66m' -> 3660. Height could also be interpreted as thickness.
+6. DIMENSIONS: Convert to millimetres (mm). '3.66m' -> 3660.
 7. QTY/RRP: Extract the numbers. Remove currency symbols for RRP (e.g., '$150' -> 150.0)
 
 If a value is missing: use empty string for text fields, 0 for numbers.
