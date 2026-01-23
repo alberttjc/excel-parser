@@ -1,17 +1,44 @@
-# 📊 Excel Schedule Parser
+# 📊 Excel Document Parser
 
-**FastAPI service** that transforms inconsistent Excel product schedules into standardized, type-safe JSON.
+**FastAPI service** that transforms inconsistent Excel product schedules into standardized, type-safe JSON. This parser uses a hybrid architecture that combines deterministic heuristics with data extraction using LLM.
 
-## ✨ Key Features
+The current pipeline includes the following steps:
 
-- **Unified Consolidation Pipeline**: Automatically handles both horizontal and complex vertical/hierarchical schedules by merging context across multiple rows.
-- **Robust Header Mapping**: Uses a two-pass heuristic (Exact then Substring) and a naming utility to ensure stable field mapping even with duplicate or ambiguous Excel columns.
-- **AI-Driven Enrichment**: Leverages Gemini 2.5 Flash to accurately extract product identities, brands, and specifications from consolidated text blocks.
-- **Data Resiliency**: Filters out metadata, empty rows, and footers (e.g., T&Cs) to produce clean, product-only datasets.
+- **Ingestion**: Reads and converts raw XLXS file into dataframe.
+- **Detection**: Heuristic-based header discovery using data density analysis.
+- **Mapping**: Header matching using two-pass matching (Exact -> Substring) with LLM extraction as fallback.
+- **Consolidation**: Multi-row records are merged using `doc_code` as primary key.
+- **Enrichment**: Attribution extraction via LLM tool calls (e.g. Google Gemini).
+- **Normalization**: Units (m -> mm), currency, and quantity cleanup.
 
----
+### System Architecture
 
----
+For production-grade workloads, we can design the system to transition to an asynchronous, task-based workflow.
+
+Note: This is a simple example and does not include all the features of a production-grade system.
+
+```mermaid
+graph LR
+    User([User]) -->|Upload Excel File| API[FastAPI]
+
+    subgraph App [Containerised Backend]
+        API -->|Task Enqueue| Redis[(Redis)]
+        Redis -.->|Event Poll| Worker[Worker Service]
+
+        subgraph Logic [POST /parse]
+            Worker --> Models[Pydantic Schema]
+            Models <--> Agents[Attributes Extraction]
+        end
+    end
+
+    subgraph Service [External]
+        Agents <--> Gemini[Gemini API]
+        API & Worker --- DB[(Postgres DB)]
+    end
+
+    API -.->|JSON Output| User
+    Worker -.->|Stored Output| DB
+```
 
 ## 🚀 Quick Start
 
