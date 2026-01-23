@@ -32,7 +32,7 @@ graph LR
     end
 
     subgraph Service [External]
-        Agents <--> Gemini[Gemini API]
+        Agents <--> LLM[LLM API]
         API & Worker --- DB[(Postgres DB)]
     end
 
